@@ -108,7 +108,7 @@
           };
 
           // THIS IS THE BULLETPROOF METHOD (no-cors = no more "Failed to fetch")
-          fetch("https://script.google.com/macros/s/AKfycbwQbf9pZNU4KsTU_gTklzHU-9hCeqsjl3AFlDGdy1049jCX9hf7Kp4FqB1MuS1dFLB9/exec", {
+          fetch("https://script.google.com/macros/s/AKfycbwQbf9pZNU4KsTU_gTklzHU-9hCeqsjl3AFlDGdy1049jCX9hf7Kp4FqB1MuS1dFLB9/exec?v=1", {
             method: "POST",
             mode: "no-cors",           // ← Magic line: bypasses CORS completely
             cache: "no-cache",
@@ -142,3 +142,4 @@
 
 </body>
 </html>
+
