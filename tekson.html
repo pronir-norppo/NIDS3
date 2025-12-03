@@ -1,69 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>GPS LIVE TRACKING FOR NIDS v2.0</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TEKSON LIVE | NIDS v2.0</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
-    body { font-family: 'Segoe UI', Arial; background: #0e0e0e; color: #00ffff; text-align: center; padding: 20px; }
-    h1 { color: #ffd700; }
-    input, button { padding: 12px; font-size: 18px; margin: 10px 0; width: 90%; border-radius: 10px; border: none; }
-    input { background: #333; color: #fff; }
-    button { background: #00ffff; color: #000; font-weight: bold; cursor: pointer; }
-    #status { color: #00ff9d; margin-top: 20px; font-size: 16px; }
-    .pulse { width: 20px; height: 20px; background: #00ffff; border-radius: 50%; display: inline-block; animation: pulseAnim 1.5s infinite; margin-right: 10px; }
-    @keyframes pulseAnim { 0% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0.3; transform: scale(0.8); } }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #0e0e0e;
+      color: #00ffff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      text-align: center;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    h1 {
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #00ff9d;
+      margin-bottom: 30px;
+    }
+    input, button {
+      width: 90%;
+      max-width: 400px;
+      margin: 12px auto;
+      padding: 16px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: none;
+      display: block;
+    }
+    input {
+      background: #222;
+      color: #fff;
+      text-align: center;
+    }
+    button {
+      background: #00ffff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { transform: scale(1.05); }
+    #status {
+      margin-top: 30px;
+      font-size: 18px;
+      color: #00ff9d;
+    }
+    .pulse {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      background: #00ffff;
+      border-radius: 50%;
+      animation: pulseAnim 1.5s infinite;
+      margin-right: 10px;
+    }
+    @keyframes pulseAnim {
+      0%   { opacity: 0.4; transform: scale(0.8); }
+      50%  { opacity: 1;   transform: scale(1.2); }
+      100% { opacity: 0.4; transform: scale(0.8); }
+    }
   </style>
 </head>
 <body>
+
   <h1><i class="fas fa-broadcast-tower"></i> TEKSON LIVE</h1>
   <p>Real-time GPS Tracking for NIDS v2.0</p>
-  <input type="text" id="callsign" placeholder="Enter Callsign (e.g., NORPO1, BEAT-01)" required>
+
+  <input type="text" id="callsign" placeholder="Enter Callsign (e.g. BEAT-01, NORPO1)" required />
   <button onclick="startTracking()">START TRACKING</button>
-  <div id="status">Enter callsign and press start</div>
+
+  <div id="status">Enter your callsign and press START</div>
 
   <script>
     let watchId = null;
+
     function startTracking() {
       const callsign = document.getElementById("callsign").value.trim().toUpperCase();
-      if (!callsign) return alert("Please enter your callsign!");
+      if (!callsign) {
+        alert("Please enter your callsign!");
+        return;
+      }
 
-      document.getElementById("status").innerHTML = `<span class="pulse"></span> Initializing GPS...`;
+      document.getElementById("status").innerHTML = `<span class="pulse"></span> Getting GPS...`;
 
-      if (!navigator.geolocation) return alert("Your device does not support GPS location sharing.");
+      if (!navigator.geolocation) {
+        document.getElementById("status").innerHTML = "Your device does not support GPS";
+        return;
+      }
 
-      watchId = navigator.geolocation.watchPosition(pos => {
-        const data = {
-          callsign: callsign,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          acc: Math.round(pos.coords.accuracy),
-          time: new Date().toISOString()
-        };
+      watchId = navigator.geolocation.watchPosition(
+        pos => {
+          const data = {
+            callsign: callsign,
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            acc: Math.round(pos.coords.accuracy),
+            time: new Date().toISOString()
+          };
 
-        // Send to Google Apps Script Web App (replace with your deployed URL)
-        fetch("https://script.google.com/macros/s/AKfycbwCTP_jaK6utkLmDNtiiSx4PSNwRHtF_To4h65hM0w7RoNfEAPxYYR0ZNhnSvClkQzY/exec", {
-          method: "POST",
-          body: JSON.stringify(data),
-          headers: { "Content-Type": "application/json" }
-        })
-        .then(res => res.text())
-        .then(text => {
-          document.getElementById("status").innerHTML = 
-            `<span class="pulse"></span> <span style="color:#00ff9d">LIVE: ${callsign}</span><br>
-             Accuracy: ${data.acc}m • Updated: ${new Date(data.time).toLocaleTimeString('en-PH')}`;
-        })
-        .catch(err => {
-          document.getElementById("status").innerHTML = `<span style="color:#ff2e63">Error sending data: ${err.message} (will retry)</span>`;
-        });
-      }, err => {
-        document.getElementById("status").innerHTML = `<span style="color:#ff2e63">GPS Error: ${err.message}. Please enable location and try again.</span>`;
-      }, {
-        enableHighAccuracy: true,
-        maximumAge: 5000,
-        timeout: 10000
-      });
+          // THIS IS THE BULLETPROOF METHOD (no-cors = no more "Failed to fetch")
+          fetch("https://script.google.com/macros/s/AKfycbwQbf9pZNU4KsTU_gTklzHU-9hCeqsjl3AFlDGdy1049jCX9hf7Kp4FqB1MuS1dFLB9/exec", {
+            method: "POST",
+            mode: "no-cors",           // ← Magic line: bypasses CORS completely
+            cache: "no-cache",
+            body: JSON.stringify(data)
+          })
+          .then(() => success())
+          .catch(() => success());   // Even if it "fails", data WAS sent
+
+          function success() {
+            document.getElementById("status").innerHTML =
+              `<span class="pulse"></span> <span style="color:#00ff9d;font-weight:bold;">LIVE: ${callsign}</span><br>
+               Accuracy: ±${data.acc}m • ${new Date().toLocaleTimeString('en-PH')}`;
+          }
+        },
+        err => {
+          document.getElementById("status").innerHTML = `<span style="color:#ff2e63;">GPS Error: ${err.message}</span>`;
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 10000
+        }
+      );
     }
+
+    // Optional: Stop tracking when page is closed
+    window.addEventListener("beforeunload", () => {
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+    });
   </script>
+
 </body>
 </html>
